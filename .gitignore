@@ -1,0 +1,19 @@
+# Environments
+venv/
+env/
+.env
+
+# Python junk
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django specific
+db.sqlite3
+media/
+staticfiles/
+
+# Editor/OS specific
+.vscode/
+.DS_Store
+Thumbs.db
