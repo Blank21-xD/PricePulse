@@ -1,4 +1,4 @@
-from django.db import db
+from django.db import models
 
 
 class Item(models.Model):
