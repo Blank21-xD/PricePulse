@@ -14,6 +14,22 @@
       <h1 class="text-primary">PricePulse</h1>
       <p class="lead">Tracking the best deals for you.</p>
     </div>
+
+    <div class="card p-5 shadow-sm">
+      <h1 class="text-primary">PricePulse</h1>
+      <p class="lead">Tracking the best deals for you.</p>
+
+      <ul class="list-group mt-3">
+        {% for item in items %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          {{ item.name }} ({{ item.store }})
+          <span class="badge bg-success rounded-pill">${{ item.target_price }}</span>
+        </li>
+        {% empty %}
+        <li class="list-group-item">No items tracked yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
   </body>
 
 </html>
