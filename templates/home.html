@@ -28,6 +28,13 @@
         <li class="list-group-item">No items tracked yet.</li>
         {% endfor %}
       </ul>
+
+      <small class="text-muted">Recent History:</small>
+      <div class="d-flex gap-2 overflow-auto pb-2">
+        {% for record in item.history.all|slice:":5" %}
+        <span class="badge bg-light text-dark border">${{ record.price }}</span>
+        {% endfor %}
+      </div>
     </div>
   </body>
 
