@@ -1,8 +1,10 @@
 from django.contrib import admin
 from django.urls import path
-from .views import home  # Import your new view
+from .views import home
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', home, name='home'),
+    path('delete/<int:item_id>/', views.delete_item, name='delete_item'),
 ]
