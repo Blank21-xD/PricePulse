@@ -14,6 +14,11 @@
     <div class="card p-5 shadow-sm">
       <h1 class="text-primary">PricePulse</h1>
       <p class="lead">Tracking the best deals for you.</p>
+      <form method="post" class="mb-4 p-3 border rounded bg-light">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="btn btn-primary">Add Item</button>
+      </form>
 
       <ul class="list-group mt-3">
         {% for item in items %}
