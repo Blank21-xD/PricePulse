@@ -12,12 +12,17 @@
   <body class="container mt-5 text-center">
 
     <div class="card p-5 shadow-sm">
-      <h1 class="text-primary">PricePulse</h1>
-      <p class="lead">Tracking the best deals for you.</p>
-      <form method="post" class="mb-4 p-3 border rounded bg-light">
+      <form method="post" class="card p-4 mb-4 shadow-sm border-0 bg-light">
         {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit" class="btn btn-primary">Add Item</button>
+        <h5 class="mb-3">Add New Item</h5>
+        <div class="row g-3">
+          <div class="col-md-4">{{ form.name }}</div>
+          <div class="col-md-3">{{ form.store }}</div>
+          <div class="col-md-3">{{ form.target_price }}</div>
+          <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100">Add</button>
+          </div>
+        </div>
       </form>
 
       <ul class="list-group mt-3">
