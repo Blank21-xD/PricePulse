@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from tracker.models import Item, PriceHistory
 from tracker.forms import ItemForm
+import random
 
 
 def home(request):
@@ -39,4 +40,17 @@ def delete_item(request, item_id):
     """
     item = get_object_or_404(Item, id=item_id)
     item.delete()
+    return redirect('home')
+
+
+def check_price(request, item_id):
+    item = get_object_or_404(Item, id=item_id)
+
+    # Simulate a price change: Current price +/- a random amount
+    variation = round(random.uniform(-2.0, 2.0), 2)
+    new_price = max(0.01, float(item.target_price) + variation)
+
+    # Save to history
+    PriceHistory.objects.create(item=item, price=new_price)
+
     return redirect('home')

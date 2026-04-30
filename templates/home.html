@@ -32,6 +32,7 @@
             {{ item.name }} ({{ item.store }})
             <span class="badge bg-success rounded-pill ms-2">${{ item.target_price }}</span>
           </div>
+          <a href="{% url 'check_price' item.id %}" class="btn btn-sm btn-outline-primary">Check Price</a>
           <a href="{% url 'delete_item' item.id %}" class="btn btn-sm btn-outline-danger">Delete</a>
         </li>
         {% empty %}
