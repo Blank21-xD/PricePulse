@@ -19,3 +19,14 @@ class PriceHistory(models.Model):
 
     class Meta:
         ordering = ['-recorded_at']
+
+
+def get_trend(self):
+    history = self.history.all()[:2]  # Get the 2 most recent prices
+    if len(history) < 2:
+        return "neutral"
+    if history[0].price < history[1].price:
+        return "down"
+    if history[0].price > history[1].price:
+        return "up"
+    return "neutral"
