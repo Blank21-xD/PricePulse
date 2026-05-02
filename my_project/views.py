@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from tracker.models import Item, PriceHistory
 from tracker.forms import ItemForm
 import random
+from django.contrib import messages
 
 
 def home(request):
@@ -52,5 +53,7 @@ def check_price(request, item_id):
 
     # Save to history
     PriceHistory.objects.create(item=item, price=new_price)
+    messages.success(
+        request, f"Pulse Check complete for {item.name}! New price: ${new_price}")
 
     return redirect('home')
