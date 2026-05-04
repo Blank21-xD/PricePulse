@@ -1,60 +1,69 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from tracker.models import Item, PriceHistory
 from tracker.forms import ItemForm
-import random
 from django.contrib import messages
+from django.db.models import Avg
+import random
 
 
 def home(request):
-    query = request.GET.get('search')  # Get the search term from the URL
-      items = Item.objects.prefetch_related('history').all()
+    # 1. Get the search query from the URL
+    query = request.GET.get('search')
 
-       if query:
-            items = items.filter(name__icontains=query)  # Filter items by name
-        if request.method == 'POST':
-            form = ItemForm(request.POST)
-            if form.is_valid():
-                # Save the item first
-                new_item = form.save()
+    # 2. Start with all items and prefetch history for speed
+    items = Item.objects.prefetch_related('history').all()
 
-                # Create the initial history entry automatically
-                PriceHistory.objects.create(
-                    item=new_item,
-                    price=new_item.target_price
-                )
+    # 3. Filter if the user searched for something
+    if query:
+        items = items.filter(name__icontains=query)
 
-                return redirect('home')
-        else:
-            form = ItemForm()
+    # 4. Handle Adding New Items (POST)
+    if request.method == 'POST':
+        form = ItemForm(request.POST)
+        if form.is_valid():
+            new_item = form.save()
+            # Create initial history entry
+            PriceHistory.objects.create(
+                item=new_item,
+                price=new_item.target_price
+            )
+            messages.success(request, f"Successfully added {new_item.name}!")
+            return redirect('home')
+    else:
+        form = ItemForm()
 
-        # Prefetch history to keep the database queries efficient
-        items = Item.objects.prefetch_related('history').all()
+    # 5. Calculate Dashboard Stats
+    stats = {
+        'total_count': items.count(),
+        'total_pulses': PriceHistory.objects.filter(item__in=items).count(),
+        'avg_price': items.aggregate(Avg('target_price'))['target_price__avg'] or 0
+    }
 
-        return render(request, 'home.html', {
-            'items': items,
-            'form': form
-        })
+    return render(request, 'home.html', {
+        'items': items,
+        'form': form,
+        'query': query,
+        'stats': stats
+    })
 
 
 def delete_item(request, item_id):
-    """
-    Deletes a specific item and all its history (due to CASCADE).
-    """
     item = get_object_or_404(Item, id=item_id)
     item.delete()
+    messages.warning(request, f"Deleted {item.name}.")
     return redirect('home')
 
 
 def check_price(request, item_id):
     item = get_object_or_404(Item, id=item_id)
 
-    # Simulate a price change: Current price +/- a random amount
+    # Simulate a price change
     variation = round(random.uniform(-2.0, 2.0), 2)
     new_price = max(0.01, float(item.target_price) + variation)
 
-    # Save to history
+    # Save the pulse check
     PriceHistory.objects.create(item=item, price=new_price)
     messages.success(
-        request, f"Pulse Check complete for {item.name}! New price: ${new_price}")
+        request, f"Pulse Check complete for {item.name}! New price: ${new_price:.2f}")
 
     return redirect('home')

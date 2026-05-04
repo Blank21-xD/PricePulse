@@ -65,6 +65,26 @@
         </div>
         {% endfor %}
         {% endif %}
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3">
+              <h6 class="text-muted small text-uppercase">Items Tracked</h6>
+              <h3 class="fw-bold mb-0 text-primary">{{ stats.total_count }}</h3>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3">
+              <h6 class="text-muted small text-uppercase">Pulse Checks</h6>
+              <h3 class="fw-bold mb-0 text-success">{{ stats.total_pulses }}</h3>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3">
+              <h6 class="text-muted small text-uppercase">Avg Price</h6>
+              <h3 class="fw-bold mb-0 text-dark">${{ stats.avg_price|stringformat:".2f" }}</h3>
+            </div>
+          </div>
+        </div>
 
         <!-- Add New Item Form -->
         <div class="card shadow-sm border-0 mb-4">
