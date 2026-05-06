@@ -28,16 +28,11 @@
       transition: transform 0.2s;
     }
 
-    .history-card:hover {
-      transform: translateY(-3px);
-    }
-
     .history-scroll {
       display: flex;
       overflow-x: auto;
       gap: 10px;
       padding-bottom: 10px;
-      scrollbar-width: thin;
     }
 
     .chart-container {
@@ -51,91 +46,45 @@
 <body>
 
   <div class="container py-5">
-    <div class="row justify-content-center">
-      <div class="col-md-10 col-lg-8">
+    <div class="text-center mb-4">
+      <h1 class="display-5 fw-bold text-primary">PricePulse</h1>
+      <p class="text-muted">Tracking Big W & Woolworths deals daily</p>
+    </div>
 
-        <!-- App Header -->
-        <div class="text-center mb-4">
-          <h1 class="display-5 fw-bold text-primary">PricePulse</h1>
-          <p class="text-muted">Tracking Big W & Woolworths deals daily</p>
-        </div>
-
-        <!-- Stats Cards -->
-        <div class="row g-3 mb-4 text-center">
-          <div class="col-md-4">
-            <div class="card border-0 shadow-sm p-3 h-100">
-              <h6 class="text-muted small text-uppercase mb-1">Items Tracked</h6>
-              <h3 class="fw-bold mb-0 text-primary">{{ stats.total_count }}</h3>
+    <!-- Items List -->
+    <div class="card shadow-sm border-0">
+      <div class="list-group list-group-flush">
+        {% for item in items %}
+        <div class="list-group-item p-4">
+          <div class="d-flex justify-content-between">
+            <div>
+              <h5 class="fw-bold">{{ item.name }}</h5>
+              <span class="badge bg-light text-secondary border">{{ item.store }}</span>
+            </div>
+            <div class="text-end">
+              <span class="h4 text-dark mb-0 d-block">${{ item.target_price }}</span>
+              <a href="{% url 'check_price' item.id %}" class="btn btn-sm btn-primary mt-2">Check</a>
             </div>
           </div>
-          <div class="col-md-4">
-            <div class="card border-0 shadow-sm p-3 h-100">
-              <h6 class="text-muted small text-uppercase mb-1">Pulse Checks</h6>
-              <h3 class="fw-bold mb-0 text-success">{{ stats.total_pulses }}</h3>
-            </div>
-          </div>
-          <div class="col-md-4">
-            <div class="card border-0 shadow-sm p-3 h-100">
-              <h6 class="text-muted small text-uppercase mb-1">Avg Price</h6>
-              <h3 class="fw-bold mb-0 text-dark">${{ stats.avg_price|stringformat:".2f" }}</h3>
-            </div>
-          </div>
-        </div>
 
-        <!-- Tracked Items List -->
-        <div class="card shadow-sm border-0">
-          <div class="card-header bg-white py-3">
-            <h5 class="mb-0 text-secondary">My Tracked Items</h5>
+          <!-- Chart Area -->
+          <div class="chart-container">
+            <canvas id="chart-{{ item.id }}"></canvas>
           </div>
-          <div class="list-group list-group-flush">
-            {% for item in items %}
-            <div class="list-group-item p-4 border-bottom">
-              <div class="d-flex justify-content-between align-items-start">
-                <div>
-                  <h5 class="mb-1 fw-bold">
-                    {{ item.name }}
-                    {% with trend=item.get_trend %}
-                    {% if trend == 'up' %}<span class="trend-up ms-2">▲</span>
-                    {% elif trend == 'down' %}<span class="trend-down ms-2">▼</span>
-                    {% else %}<span class="text-muted ms-2">▬</span>{% endif %}
-                    {% endwith %}
-                  </h5>
-                  <div class="badge bg-light text-secondary border">{{ item.store }}</div>
-                </div>
-                <div class="text-end">
-                  <span class="h4 text-dark mb-0 d-block">${{ item.target_price }}</span>
-                  <div class="btn-group mt-2 shadow-sm">
-                    <a href="{% url 'check_price' item.id %}" class="btn btn-sm btn-primary">Check</a>
-                    <a href="{% url 'delete_item' item.id %}" class="btn btn-sm btn-outline-danger"
-                      onclick="return confirm('Delete?')">Delete</a>
-                  </div>
-                </div>
+
+          <!-- History Row -->
+          <div class="mt-4">
+            <div class="history-scroll">
+              {% for record in item.history.all|dictsortreversed:"recorded_at"|slice:":10" %}
+              <div class="history-card bg-white border rounded px-3 py-2 text-center shadow-sm">
+                <div class="fw-bold text-dark">${{ record.price }}</div>
+                <div class="text-muted small" style="font-size: 0.65rem;">{{ record.recorded_at|date:"M d" }}</div>
               </div>
-
-              <!-- Visual Trend Chart -->
-              <div class="chart-container">
-                <canvas id="chart-{{ item.id }}"></canvas>
-              </div>
-
-              <!-- History Timeline -->
-              <div class="mt-4">
-                <p class="text-uppercase text-muted fw-bold mb-2" style="font-size: 0.65rem;">Latest 10 Points</p>
-                <div class="history-scroll">
-                  {% for record in item.history.all|dictsortreversed:"recorded_at"|slice:":10" %}
-                  <div class="history-card bg-white border rounded px-3 py-2 text-center shadow-sm">
-                    <div class="fw-bold text-dark">${{ record.price }}</div>
-                    <div class="text-muted small" style="font-size: 0.65rem;">{{ record.recorded_at|date:"M d" }}</div>
-                  </div>
-                  {% empty %}
-                  <span class="text-muted small italic">Initial check pending...</span>
-                  {% endfor %}
-                </div>
-              </div>
+              {% endfor %}
             </div>
-            {% endfor %}
           </div>
         </div>
-
+        {% endfor %}
       </div>
     </div>
   </div>
@@ -143,6 +92,7 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       {% for item in items %}
+      /* JavaScript variables must not have spaces in the curly braces */
       const canvas{{ item.id }
     } = document.getElementById('chart-{{ item.id }}');
     if (canvas{ { item.id } }) {
@@ -151,15 +101,15 @@
     new Chart(ctx{{ item.id }}, {
       type: 'line',
       data: {
+        /* Django filters MUST NOT have spaces around pipes or colons */
         labels: [{% for record in item.history.all | dictsortreversed: "recorded_at"| slice: ":10" %}"{{ record.recorded_at|date:'M d' }}",{% endfor %}].reverse(),
       datasets: [{
         label: 'Price',
         data: [{% for record in item.history.all | dictsortreversed: "recorded_at"| slice: ":10" %}{{ record.price }}, {% endfor %}].reverse(),
       borderColor: '#0d6efd',
-      backgroundColor: 'rgba(13, 110, 253, 0.05)',
+      tension: 0.3,
       fill: true,
-      borderWidth: 2,
-      tension: 0.3
+      backgroundColor: 'rgba(13, 110, 253, 0.05)'
             }]
           },
       options: {
@@ -173,7 +123,6 @@
     {% endfor %}
     });
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 
 </html>
