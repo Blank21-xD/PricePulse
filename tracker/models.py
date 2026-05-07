@@ -10,6 +10,17 @@ class Item(models.Model):
     def __str__(self):
         return self.name
 
+    # MOVE THIS INSIDE THE CLASS
+    def get_trend(self):
+        history = self.history.all()[:2]  # Get the 2 most recent prices
+        if len(history) < 2:
+            return "neutral"
+        if history[0].price < history[1].price:
+            return "down"
+        if history[0].price > history[1].price:
+            return "up"
+        return "neutral"
+
 
 class PriceHistory(models.Model):
     item = models.ForeignKey(
@@ -19,14 +30,3 @@ class PriceHistory(models.Model):
 
     class Meta:
         ordering = ['-recorded_at']
-
-
-def get_trend(self):
-    history = self.history.all()[:2]  # Get the 2 most recent prices
-    if len(history) < 2:
-        return "neutral"
-    if history[0].price < history[1].price:
-        return "down"
-    if history[0].price > history[1].price:
-        return "up"
-    return "neutral"
