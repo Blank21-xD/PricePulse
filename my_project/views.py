@@ -6,46 +6,27 @@ from django.db.models import Avg
 import random
 import csv
 from django.http import HttpResponse
+from django.db.models import Q
 
 
 def home(request):
-    # 1. Get the search query from the URL
-    query = request.GET.get('search')
+    query = request.GET.get('q')
+    store_filter = request.GET.get('store')
 
-    # 2. Start with all items and prefetch history for speed
-    items = Item.objects.prefetch_related('history').all()
+    items = Item.objects.all()
 
-    # 3. Filter if the user searched for something
+    # Apply Search
     if query:
-        items = items.filter(name__icontains=query)
+        items = items.filter(Q(name__icontains=query))
 
-    # 4. Handle Adding New Items (POST)
-    if request.method == 'POST':
-        form = ItemForm(request.POST)
-        if form.is_valid():
-            new_item = form.save()
-            # Create initial history entry
-            PriceHistory.objects.create(
-                item=new_item,
-                price=new_item.target_price
-            )
-            messages.success(request, f"Successfully added {new_item.name}!")
-            return redirect('home')
-    else:
-        form = ItemForm()
-
-    # 5. Calculate Dashboard Stats
-    stats = {
-        'total_count': items.count(),
-        'total_pulses': PriceHistory.objects.filter(item__in=items).count(),
-        'avg_price': items.aggregate(Avg('target_price'))['target_price__avg'] or 0
-    }
+    # Apply Store Filter
+    if store_filter:
+        items = items.filter(store=store_filter)
 
     return render(request, 'home.html', {
         'items': items,
-        'form': form,
         'query': query,
-        'stats': stats
+        'store_filter': store_filter
     })
 
 
