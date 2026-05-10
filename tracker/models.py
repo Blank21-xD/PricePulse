@@ -21,6 +21,13 @@ class Item(models.Model):
             return "up"
         return "neutral"
 
+    def is_on_sale(self):
+        # Gets the newest price thanks to ordering = ['-recorded_at']
+        latest_history = self.history.first()
+        if latest_history:
+            return latest_history.price <= self.target_price
+        return False
+
 
 class PriceHistory(models.Model):
     item = models.ForeignKey(

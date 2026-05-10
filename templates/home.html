@@ -23,6 +23,10 @@
       font-weight: bold;
     }
 
+    .trend-neutral {
+      color: #6c757d;
+    }
+
     .history-card {
       min-width: 100px;
       transition: transform 0.2s;
@@ -40,75 +44,117 @@
       width: 100%;
       margin-top: 15px;
     }
+
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+      }
+
+      50% {
+        transform: scale(1.05);
+      }
+
+      100% {
+        transform: scale(1);
+      }
+    }
+
+    .animate-pulse {
+      animation: pulse 1.5s infinite;
+    }
   </style>
 </head>
 
 <body>
-
   <div class="container py-5">
     <div class="text-center mb-4">
       <h1 class="display-5 fw-bold text-primary">PricePulse</h1>
-      <p class="text-muted">Tracking Big W & Woolworths deals daily</p>
-    </div>
-
-    <div class="text-center mb-4">
-      <h1 class="display-5 fw-bold text-primary">PricePulse</h1>
-      <p class="text-muted">Tracking Big W & Woolworths deals daily</p>
-
-      <a href="{% url 'export_history' %}" class="btn btn-outline-secondary btn-sm mt-2">
-        📥 Export Data to CSV
+      <p class="text-muted">Tracking Australian retail deals daily</p>
+      <a href="{% url 'export_history' %}" class="btn btn-outline-secondary btn-sm shadow-sm">
+        📥 Export History to CSV
       </a>
     </div>
-    <!-- Items List -->
-    <div class="card shadow-sm border-0">
-      <div class="list-group list-group-flush">
-        <div class="row g-2 mb-4">
-          <div class="col-md-8">
-            <form method="GET" class="d-flex">
-              <input type="text" name="q" class="form-control me-2" placeholder="Search items..."
-                value="{{ query|default:'' }}">
-              <button type="submit" class="btn btn-primary">Search</button>
-            </form>
-          </div>
-          <div class="col-md-4 text-end">
-            <div class="btn-group w-100">
-              <a href="?store=Woolworths"
-                class="btn btn-outline-secondary btn-sm {% if store_filter == 'Woolworths' %}active{% endif %}">Woolworths</a>
-              <a href="?store=Big W"
-                class="btn btn-outline-secondary btn-sm {% if store_filter == 'Big W' %}active{% endif %}">Big W</a>
-              <a href="/" class="btn btn-outline-danger btn-sm">Clear</a>
-            </div>
-          </div>
+
+    <div class="row text-center mb-4">
+      <div class="col-6">
+        <div class="bg-white p-3 rounded shadow-sm border-0">
+          <small class="text-muted text-uppercase fw-bold">Items Tracked</small>
+          <h3 class="fw-bold text-primary mb-0">{{ total_tracked }}</h3>
         </div>
+      </div>
+      <div class="col-6">
+        <div class="bg-white p-3 rounded shadow-sm border-0">
+          <small class="text-muted text-uppercase fw-bold">Active Deals</small>
+          <h3 class="fw-bold text-success mb-0">{{ on_sale_count }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-2 mb-4">
+      <div class="col-md-8">
+        <form method="GET" class="d-flex">
+          <input type="text" name="q" class="form-control me-2 shadow-sm" placeholder="Search items..."
+            value="{{ query|default:'' }}">
+          <button type="submit" class="btn btn-primary shadow-sm">Search</button>
+        </form>
+      </div>
+      <div class="col-md-4">
+        <div class="btn-group w-100 shadow-sm">
+          <a href="?store=Woolworths"
+            class="btn btn-outline-secondary btn-sm {% if store_filter == 'Woolworths' %}active{% endif %}">Woolies</a>
+          <a href="?store=Big W"
+            class="btn btn-outline-secondary btn-sm {% if store_filter == 'Big W' %}active{% endif %}">Big W</a>
+          <a href="/" class="btn btn-outline-danger btn-sm">Clear</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm border-0 overflow-hidden">
+      <div class="list-group list-group-flush">
         {% for item in items %}
-        <div class="list-group-item p-4">
-          <div class="d-flex justify-content-between">
+        <div class="list-group-item p-4 border-bottom">
+          <div class="d-flex justify-content-between align-items-start">
             <div>
-              <h5 class="fw-bold">{{ item.name }}</h5>
-              <span class="badge bg-light text-secondary border">{{ item.store }}</span>
+              <h5 class="fw-bold mb-1">
+                {{ item.name }}
+                {% if item.is_on_sale %}
+                <span class="badge rounded-pill bg-success ms-2 animate-pulse" style="font-size: 0.7rem;">🔥 SALE</span>
+                {% endif %}
+              </h5>
+              <span class="badge bg-light text-secondary border me-2">{{ item.store }}</span>
+
+              {% with trend=item.get_trend %}
+              {% if trend == "up" %}<span class="trend-up">▲ Rising</span>
+              {% elif trend == "down" %}<span class="trend-down">▼ Dropping</span>
+              {% else %}<span class="trend-neutral">● Stable</span>
+              {% endif %}
+              {% endwith %}
             </div>
+
             <div class="text-end">
               <span class="h4 text-dark mb-0 d-block">${{ item.target_price }}</span>
-              <a href="{% url 'check_price' item.id %}" class="btn btn-sm btn-primary mt-2">Check</a>
+              <a href="{% url 'check_price' item.id %}" class="btn btn-sm btn-primary mt-2 px-3 shadow-sm">Refresh</a>
             </div>
           </div>
 
-          <!-- Chart Area -->
           <div class="chart-container">
             <canvas id="chart-{{ item.id }}"></canvas>
           </div>
 
-          <!-- History Row -->
           <div class="mt-4">
             <div class="history-scroll">
-              {% for record in item.history.all|dictsortreversed:"recorded_at"|slice:":10" %}
+              {% for record in item.history.all|slice:":10" %}
               <div class="history-card bg-white border rounded px-3 py-2 text-center shadow-sm">
-                <div class="fw-bold text-dark">${{ record.price }}</div>
-                <div class="text-muted small" style="font-size: 0.65rem;">{{ record.recorded_at|date:"M d" }}</div>
+                <div class="fw-bold text-dark" style="font-size: 0.9rem;">${{ record.price }}</div>
+                <div class="text-muted" style="font-size: 0.6rem;">{{ record.recorded_at|date:"M d" }}</div>
               </div>
               {% endfor %}
             </div>
           </div>
+        </div>
+        {% empty %}
+        <div class="p-5 text-center">
+          <p class="text-muted">No items found. Try adding some in the Admin panel!</p>
         </div>
         {% endfor %}
       </div>
@@ -118,36 +164,39 @@
   <script>
     document.addEventListener('DOMContentLoaded', function () {
       {% for item in items %}
-      /* JavaScript variables must not have spaces in the curly braces */
-      const canvas{{ item.id }
-    } = document.getElementById('chart-{{ item.id }}');
-    if (canvas{ { item.id } }) {
-      const ctx{{ item.id }
-    } = canvas{ { item.id } }.getContext('2d');
-    new Chart(ctx{{ item.id }}, {
-      type: 'line',
-      data: {
-        /* Django filters MUST NOT have spaces around pipes or colons */
-        labels: [{% for record in item.history.all | dictsortreversed: "recorded_at"| slice: ":10" %}"{{ record.recorded_at|date:'M d' }}",{% endfor %}].reverse(),
-      datasets: [{
-        label: 'Price',
-        data: [{% for record in item.history.all | dictsortreversed: "recorded_at"| slice: ":10" %}{{ record.price }}, {% endfor %}].reverse(),
+      (function () {
+        const canvas = document.getElementById('chart-{{ item.id }}');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: [{% for record in item.history.all | slice: ":10" %}"{{ record.recorded_at|date:'M d' }}",{% endfor %}].reverse(),
+              datasets: [{
+                data: [{% for record in item.history.all | slice: ":10" %}{{ record.price }}, {% endfor %}].reverse(),
       borderColor: '#0d6efd',
+      borderWidth: 2,
       tension: 0.3,
       fill: true,
-      backgroundColor: 'rgba(13, 110, 253, 0.05)'
-            }]
-          },
+      backgroundColor: 'rgba(13, 110, 253, 0.05)',
+      pointRadius: 3,
+      pointBackgroundColor: '#0d6efd'
+                        }]
+                    },
       options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: { legend: { display: false } },
-      scales: { y: { display: false }, x: { display: false } }
-    }
-        });
+      scales: {
+        y: { display: true, ticks: { font: { size: 9 } }, grid: { color: '#f0f0f0' } },
+        x: { display: true, ticks: { font: { size: 9 } }, grid: { display: false } }
       }
+    }
+                });
+            }) ();
     {% endfor %}
-    });
+        });
   </script>
 </body>
 
