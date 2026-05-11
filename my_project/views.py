@@ -4,6 +4,22 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse
 from django.db.models import Q
 from .models import Item, PriceHistory
+from django.contrib import messages
+
+def check_price(request, item_id):
+    item = get_object_or_404(Item, id=item_id)
+    old_price = float(item.target_price) # Current price before update
+    
+    variation = round(random.uniform(-2.0, 2.0), 2)
+    new_price = old_price + variation
+    
+    PriceHistory.objects.create(item=item, price=max(0, new_price))
+    
+    # Extra Logic: Send a message if the price dropped
+    if new_price < old_price:
+        messages.success(request, f"🔥 Price dropped for {item.name}!")
+    
+    return redirect('home')
 
 
 def home(request):

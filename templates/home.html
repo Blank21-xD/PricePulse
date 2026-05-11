@@ -68,6 +68,16 @@
 <body>
   <div class="container py-5">
     <div class="text-center mb-4">
+      {% if messages %}
+      <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-success alert-dismissible fade show shadow-sm border-0" role="alert">
+          <strong>Great News!</strong> {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
       <h1 class="display-5 fw-bold text-primary">PricePulse</h1>
       <p class="text-muted">Tracking Australian retail deals daily</p>
       <a href="{% url 'export_history' %}" class="btn btn-outline-secondary btn-sm shadow-sm">
