@@ -37,3 +37,17 @@ class PriceHistory(models.Model):
 
     class Meta:
         ordering = ['-recorded_at']
+
+
+def get_price_diff_percent(self):
+    history = self.history.all()[:2]
+    if len(history) < 2:
+        return 0
+    latest = float(history[0].price)
+    previous = float(history[1].price)
+    if previous == 0:
+        return 0
+
+    # Calculate percentage change
+    diff = ((latest - previous) / previous) * 100
+    return round(diff, 1)
